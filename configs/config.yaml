@@ -1,0 +1,18 @@
+seed: 42
+max_steps: 50
+difficulty: medium          # easy | medium | hard — controls initial workload
+initial_budget: 100000.0
+initial_satisfaction: 0.7
+initial_team_hours: 160.0
+max_emails: 5
+max_tasks: 5
+max_negotiations: 3
+email_gen_prob: 0.4
+task_gen_prob: 0.3
+negotiation_gen_prob: 0.2
+reply_satisfaction_boost: 0.05
+high_urgency_ignore_penalty: -2.0
+task_miss_penalty: -3.0
+accept_offer_budget_cost: 5000.0
+negotiate_adjustment: 0.9
+step_survival_reward: 0.1

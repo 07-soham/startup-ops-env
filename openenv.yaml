@@ -1,0 +1,63 @@
+name: StartupOpsEnv
+version: "1.0.0"
+description: >
+  A deterministic, modular Reinforcement Learning environment that simulates
+  the daily operations of an early-stage startup.  The agent manages emails,
+  tasks, and deal negotiations across a configurable number of timesteps.
+author: StartupOps Team
+license: MIT
+
+entrypoint: env.core.StartupOpsEnv
+config: configs/config.yaml
+
+action_space:
+  - type: reply_email
+    args: [target_id]
+  - type: ignore_email
+    args: [target_id]
+  - type: assign_task
+    args: [target_id]
+  - type: accept_offer
+    args: [target_id]
+  - type: reject_offer
+    args: [target_id]
+  - type: negotiate
+    args: [target_id]
+  - type: wait
+    args: []
+
+observation_fields:
+  - budget
+  - satisfaction
+  - team_hours
+  - revenue
+  - num_emails
+  - num_tasks
+  - num_negotiations
+  - missed_tasks
+  - step
+  - email_ids
+  - unassigned_task_ids
+  - negotiation_ids
+  - high_urgency_emails
+  - overdue_tasks
+  - task_deadlines
+  - negotiation_offers
+  - email_urgencies
+
+reward_components:
+  - action_reward: direct reward / penalty from chosen action
+  - task_miss_penalty: applied per task that expires unassigned
+  - step_survival_reward: small constant for each step survived
+  - satisfaction_bonus: +0.5 if satisfaction > 0.8
+  - satisfaction_penalty: -0.5 if satisfaction < 0.3
+  - budget_health_bonus: +0.2 if budget > 80% of initial
+  - budget_health_penalty: -1.0 if budget < 20% of initial
+
+termination:
+  condition: "time_step >= max_steps"
+
+baselines:
+  - name: BaselineAgent
+    module: agents.baseline
+    description: Priority-based heuristic (no learning)
