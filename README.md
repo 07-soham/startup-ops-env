@@ -65,7 +65,7 @@ Reward: −2.0 (high urgency missed)
 ---
 
 ## 🏗️ Project Structure
-
+'''
 startupOps/
 ├── app.py                  # Gradio UI + HF Spaces entry-point
 ├── main.py                 # CLI runner
@@ -86,7 +86,7 @@ startupOps/
 │
 └── agents/
     └── baseline.py         # Heuristic agent
-
+'''
 ---
 
 ## ⚡ Quick Start
