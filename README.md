@@ -147,7 +147,3 @@ Scoring weights: **30 % email · 40 % task · 30 % negotiation**.
 4. No environment variables or secrets required.
 
 ---
-
-## License
-
-MIT
