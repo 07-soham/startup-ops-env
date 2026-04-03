@@ -1,4 +1,4 @@
-```markdown
+
 # 🚀 StartupOpsEnv
 
 > A **deterministic, modular Reinforcement Learning environment** that simulates  
@@ -233,4 +233,3 @@ Returns:
 ## 📜 License
 
 MIT License
-```
