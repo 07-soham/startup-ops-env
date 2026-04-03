@@ -93,23 +93,25 @@ startupOps/
 
 ### 🔹 Local Setup
 
+```bash
+# Install dependencies
 pip install -r requirements.txt
 
-# Run UI
+# Run the Gradio UI
 python app.py
 
-# CLI simulation
+# Run headless CLI (verbose step log)
 python main.py --verbose
 
-# Custom config
+# Override seed or episode length
 python main.py --seed 99 --steps 100
+```
+### Docker
 
----
-
-### 🔹 Docker
-
+```bash
 docker build -t startup-ops-env .
 docker run -p 7860:7860 startup-ops-env
+```
 
 Open → http://localhost:7860
 
