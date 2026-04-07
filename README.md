@@ -54,8 +54,6 @@ Unstructured Emails → LLM Parsing → Structured State → RL Decisions → Pe
                        └─────────────────┘
 ```
 
----
-
 
 ---
 
@@ -100,24 +98,24 @@ Unstructured Emails → LLM Parsing → Structured State → RL Decisions → Pe
 
 Email: "We need this ASAP!"
 
-↓ (LLM Parser)
+        ↓ (LLM Parser)
 
 {
-urgency: "high",
-requires_action: true
+        urgency: "high",
+        requires_action: true
 }
 
-↓ (RL Decision)
+        ↓ (RL Decision)
 
 Action: assign_task(task_1)
 
-↓ (Environment)
+        ↓ (Environment)
 
 Reward: +0.10
 Budget: unchanged
 Satisfaction: increased
 
-
+---
 
 ## Overview
 
