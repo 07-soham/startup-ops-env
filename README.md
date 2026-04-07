@@ -95,7 +95,7 @@ Unstructured Emails → LLM Parsing → Structured State → RL Decisions → Pe
 ---
 
 ## 🎮 Example Flow
-
+```
 Email: "We need this ASAP!"
 
         ↓ (LLM Parser)
@@ -114,7 +114,7 @@ Action: assign_task(task_1)
 Reward: +0.10
 Budget: unchanged
 Satisfaction: increased
-
+```
 ---
 
 ## Overview
@@ -147,7 +147,7 @@ decision-making problem with AI-powered email parsing and context-aware escalati
 ---
 
 ## 🎯 Example Simulation
-
+```
 Step 1:
 Action: reply_email(email_2)
 Reward: +0.15
@@ -161,7 +161,7 @@ Team Hours: 160 → 150
 Step 3:
 Action: ignore_email(email_3)
 Reward: −2.0 (high urgency missed)
-
+```
 ---
 
 ## 🏗️ Project Structure
