@@ -7,7 +7,7 @@ never raw dicts.
 from __future__ import annotations
 
 from enum import Enum
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -44,8 +44,12 @@ class Email(BaseModel):
     model_config = ConfigDict(validate_assignment=False)
 
     id: str
+    text: str = ""  # Full email body text
     sender: str
     subject: str
+    thread_id: str = ""  # Groups related emails
+    timestamp: int = 0  # Step/tick when email was created
+    escalation_level: int = 0  # 0=normal, 1=escalated, 2+=critical
     urgency: Urgency
     sentiment: Sentiment = Sentiment.neutral   # tone of the email
     requires_action: bool = True               # False = informational only
@@ -157,3 +161,38 @@ class Observation(BaseModel):
     task_impacts: Dict[str, float] = Field(default_factory=dict)
     negotiation_min_prices: Dict[str, float] = Field(default_factory=dict)
     negotiation_qualities: Dict[str, float] = Field(default_factory=dict)
+
+    # Thread/escalation info
+    email_thread_ids: Dict[str, str] = Field(default_factory=dict)
+    email_escalation_levels: Dict[str, int] = Field(default_factory=dict)
+
+
+# ---------------------------------------------------------------------------
+# Scenario types
+# ---------------------------------------------------------------------------
+
+class Scenario(BaseModel):
+    """A predefined scenario with emails, tasks, and negotiations."""
+
+    model_config = ConfigDict(validate_assignment=False)
+
+    name: str
+    description: str
+    emails: List[Dict] = Field(default_factory=list)
+    tasks: List[Dict] = Field(default_factory=list)
+    negotiations: List[Dict] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Parser result
+# ---------------------------------------------------------------------------
+
+class ParsedEmail(BaseModel):
+    """Result from LLM or keyword parser."""
+
+    model_config = ConfigDict(validate_assignment=False)
+
+    urgency: Urgency
+    sentiment: Sentiment
+    requires_action: bool
+    confidence: float = 1.0  # Parser confidence score

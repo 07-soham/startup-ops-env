@@ -1,20 +1,31 @@
-FROM python:3.11-slim
+# Dockerfile for StartupOps AI Simulator - HF Spaces
+# Uses Gradio app as entry point for HF Spaces compatibility
 
-# Metadata
-LABEL maintainer="StartupOps Team"
-LABEL description="StartupOpsEnv — Startup Operations RL Environment"
+FROM python:3.11-slim
 
 WORKDIR /app
 
-# Install Python dependencies
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Python requirements
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
-COPY . .
+# Copy all application code
+COPY env/ ./env/
+COPY agents/ ./agents/
+COPY configs/ ./configs/
+COPY api.py .
+COPY app.py .
+COPY main.py .
+COPY inference.py .
+COPY openenv.yaml .
 
-# Hugging Face Spaces listens on 7860
+# Expose port 7860 for HF Spaces (Gradio default)
 EXPOSE 7860
 
-# Gradio auto-detects HF environment and binds to 0.0.0.0:7860
+# Run Gradio app (HF Spaces compatible)
 CMD ["python", "app.py"]

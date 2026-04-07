@@ -75,7 +75,9 @@ class StartupOpsEnv:
             budget=0.0, satisfaction=0.0, team_hours=0.0, revenue=0.0
         )  # placeholder; overwritten by _setup_episode()
         self._setup_episode()
-        self.generator = EventGenerator(self.config, self.rng)
+        mode = self.config.get("mode", "auto")
+        manual_inputs = self.config.get("manual_inputs", None)
+        self.generator = EventGenerator(self.config, self.rng, mode=mode, manual_inputs=manual_inputs)
 
     def reset(self) -> Observation:
         """Reset the environment to its initial state and return first obs."""
@@ -83,7 +85,9 @@ class StartupOpsEnv:
         self.logs = []
         self.time_step = 0
         self._setup_episode()
-        self.generator = EventGenerator(self.config, self.rng)
+        mode = self.config.get("mode", "auto")
+        manual_inputs = self.config.get("manual_inputs", None)
+        self.generator = EventGenerator(self.config, self.rng, mode=mode, manual_inputs=manual_inputs)
         return self._get_obs()
 
     def _setup_episode(self) -> None:
@@ -95,10 +99,17 @@ class StartupOpsEnv:
         then seeds all ID/lifetime counters from the returned counts.
         """
         difficulty: str = self.config.get("difficulty", "medium")
+        scenario_name: Optional[str] = self.config.get("scenario", None)
+        mode: str = self.config.get("mode", "auto")
+        manual_inputs = self.config.get("manual_inputs", None)
+
         emails, tasks, negotiations, ne, nt, nn = generate_initial_state(
             config=self.config,
             rng=self.rng,
             difficulty=difficulty,
+            scenario_name=scenario_name,
+            manual_inputs=manual_inputs,
+            mode=mode,
         )
 
         # ID counters continue from initial batch so per-step IDs never clash
@@ -250,6 +261,7 @@ class StartupOpsEnv:
             self._email_counter,
             self._task_counter,
             self._negotiation_counter,
+            self.time_step,
         )
 
         self._email_counter += len(new_emails)
@@ -402,6 +414,9 @@ class StartupOpsEnv:
             task_impacts={t.id: t.impact for t in s.tasks},
             negotiation_min_prices={n.id: n.min_price for n in s.negotiations},
             negotiation_qualities={n.id: n.quality for n in s.negotiations},
+            # ---- Thread/escalation info ----------------------------------
+            email_thread_ids={e.id: e.thread_id for e in s.emails},
+            email_escalation_levels={e.id: e.escalation_level for e in s.emails},
         )
 
     # ------------------------------------------------------------------

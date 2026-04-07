@@ -107,22 +107,22 @@ def grade_episode(
     # ------------------------------------------------------------------
     tasks_not_missed = total_tasks_created - state.missed_tasks
     summary = (
-        f"Episode complete — {len(logs)} steps.\n"
+        f"Episode complete - {len(logs)} steps.\n"
         f"\n"
-        f"📧  Email Score      : {email_score:.2%}  "
+        f"  Email Score       : {email_score:.2%}  "
         f"({state.replied_emails} / {total_emails_created} replied)\n"
-        f"✅  Task Score       : {task_score:.2%}  "
+        f"  Task Score        : {task_score:.2%}  "
         f"({tasks_not_missed} / {total_tasks_created} not missed)\n"
-        f"🤝  Negotiation Score: {negotiation_score:.2%}  "
+        f"  Negotiation Score : {negotiation_score:.2%}  "
         f"({state.accepted_negotiations} / {max(1, handled_negs)} accepted)\n"
         f"\n"
-        f"🏆  Overall Score    : {overall_score:.2%}\n"
-        f"💰  Total Reward     : {total_reward:.2f}\n"
+        f"  Overall Score     : {overall_score:.2%}\n"
+        f"  Total Reward      : {total_reward:.2f}\n"
         f"\n"
-        f"📊  Final Budget     : ${state.budget:,.2f}\n"
-        f"📈  Revenue Generated: ${state.revenue:,.2f}\n"
-        f"😊  Satisfaction     : {state.satisfaction:.2%}\n"
-        f"❌  Missed Tasks     : {state.missed_tasks}\n"
+        f"  Final Budget      : ${state.budget:,.2f}\n"
+        f"  Revenue Generated : ${state.revenue:,.2f}\n"
+        f"  Satisfaction      : {state.satisfaction:.2%}\n"
+        f"  Missed Tasks      : {state.missed_tasks}\n"
     )
 
     return {

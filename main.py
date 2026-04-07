@@ -47,6 +47,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Print step-by-step logs.",
     )
+    parser.add_argument(
+        "--scenario",
+        type=str,
+        default=None,
+        help="Scenario name to run (investor_pressure, vendor_delay, customer_churn, hiring_crunch).",
+    )
     return parser.parse_args()
 
 
@@ -65,12 +71,15 @@ def main() -> None:
         config["seed"] = args.seed
     if args.steps is not None:
         config["max_steps"] = args.steps
+    if args.scenario is not None:
+        config["scenario"] = args.scenario
+        config["mode"] = "auto"
 
     env = StartupOpsEnv(config)
     agent = BaselineAgent()
 
     print(f"\n{'='*60}")
-    print(f"  StartupOpsEnv — Baseline Agent")
+    print(f"  StartupOpsEnv - Baseline Agent")
     print(f"  seed={config['seed']}  max_steps={config['max_steps']}")
     print(f"{'='*60}\n")
 
