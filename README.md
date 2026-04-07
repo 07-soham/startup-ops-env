@@ -38,16 +38,16 @@ Unstructured Emails → LLM Parsing → Structured State → RL Decisions → Pe
 │   Frontend      │     │   API Layer     │     │   + LLM Parser  │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
         │                       │                       │
-        │              ┌────────┴────────┐             │
-        │              │  Scenario Lib   │             │
-        │              │  - investor_pressure         │
-        │              │  - vendor_delay   │             │
-        │              │  - customer_churn │             │
-        │              │  - hiring_crunch  │             │
-        │              └─────────────────┘             │
-        │                                              │
-        │              ┌─────────────────┐             │
-        └──────────────│  LLM Parser     │─────────────┘
+        │              ┌────────┴──────────┐            │
+        │              │  Scenario Lib     │            │
+        │              │  - investor_pressure           │
+        │              │  - vendor_delay   │            │
+        │              │  - customer_churn │            │
+        │              │  - hiring_crunch  │            │
+        │              └───────────────────┘            │
+        │                                               │
+        │              ┌─────────────────┐              │
+        └──────────────│  LLM Parser     │──────────────┘
                        │  - Claude API   │
                        │  - OpenAI API   │
                        │  - Fallback     │
@@ -490,6 +490,6 @@ npm test
 
 ---
 
-## 💡 Use Cases
+## Licenses
 
 MIT
