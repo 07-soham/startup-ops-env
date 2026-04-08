@@ -16,6 +16,7 @@ from enum import Enum
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
 
 from env.core import StartupOpsEnv
@@ -183,10 +184,96 @@ def get_base_config(seed: int = 42, max_steps: int = 50) -> Dict[str, Any]:
 # API Endpoints
 # -----------------------------------------------------------------------------
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    """API health check."""
-    return {"status": "ok", "service": "StartupOps AI Simulator"}
+    """Landing page with API documentation links."""
+    return """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StartupOps AI Simulator</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .container {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            max-width: 700px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        h1 { font-size: 2.5em; margin-bottom: 8px; color: #1a202c; }
+        .subtitle { color: #4a5568; font-size: 1.1em; margin-bottom: 32px; }
+        .status {
+            background: #c6f6d5;
+            color: #22543d;
+            padding: 12px 20px;
+            border-radius: 8px;
+            display: inline-block;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+        .section { margin-bottom: 28px; }
+        h2 { font-size: 1.2em; color: #2d3748; margin-bottom: 12px; }
+        .endpoint {
+            background: #f7fafc;
+            border-left: 4px solid #667eea;
+            padding: 12px 16px;
+            margin: 8px 0;
+            border-radius: 0 8px 8px 0;
+            font-family: monospace;
+            font-size: 0.9em;
+        }
+        .method { color: #667eea; font-weight: bold; }
+        a.button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 14px 28px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            margin-top: 16px;
+            transition: background 0.2s;
+        }
+        a.button:hover { background: #5568d3; }
+        .emoji { font-size: 1.5em; margin-right: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="status">✅ Service Online</div>
+        <h1>🚀 StartupOps AI Simulator</h1>
+        <p class="subtitle">AI-powered startup operations simulation with OpenEnv API</p>
+
+        <div class="section">
+            <h2>OpenEnv Standard Endpoints</h2>
+            <div class="endpoint"><span class="method">POST</span> /reset - Reset environment</div>
+            <div class="endpoint"><span class="method">POST</span> /step - Execute action step</div>
+            <div class="endpoint"><span class="method">GET</span>  /state - Get current state</div>
+        </div>
+
+        <div class="section">
+            <h2>Simulation Endpoints</h2>
+            <div class="endpoint"><span class="method">GET</span>  /scenarios - List scenarios</div>
+            <div class="endpoint"><span class="method">POST</span> /run-simulation - Run full simulation</div>
+            <div class="endpoint"><span class="method">POST</span> /parse-email - Parse email with LLM</div>
+        </div>
+
+        <a href="/docs" class="button">📖 View API Documentation</a>
+    </div>
+</body>
+</html>"""
 
 
 @app.get("/scenarios", response_model=List[ScenarioInfo])
