@@ -6,7 +6,7 @@ colorTo: green
 sdk: docker
 pinned: false
 license: mit
-short_description: Startup operations simulator with OpenEnv REST API
+short_description: AI-powered startup ops simulator with OpenEnv API
 ---
 
 # 🚀 StartupOps AI Simulator
