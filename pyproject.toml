@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "startup-ops-env"
+version = "1.0.0"
+description = "A deterministic RL environment simulating startup operations — email triage, task management, and deal negotiations."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.9"
+authors = [{ name = "StartupOps Team" }]
+keywords = ["reinforcement-learning", "simulation", "startup", "llm", "ai"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+dependencies = [
+    "pyyaml>=6.0",
+    "pydantic>=2.0.0",
+    "gradio>=4.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.29.0",
+    "python-multipart>=0.0.9",
+    "numpy>=1.24.0",
+    "matplotlib>=3.7.0",
+]
+
+[project.optional-dependencies]
+llm = [
+    "anthropic>=0.25.0",
+    "openai>=1.0.0",
+]
+dev = [
+    "pytest>=7.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.scripts]
+# CLI entry-point: `startupops` runs the baseline agent from the terminal
+startupops = "main:main"
+
+[project.urls]
+Homepage = "https://github.com/07-soham/startup-ops-env"
+"HuggingFace Space" = "https://huggingface.co/spaces/07-soham/startup-ops-env"
+"Bug Tracker" = "https://github.com/07-soham/startup-ops-env/issues"
+
+[tool.setuptools.packages.find]
+include = ["env*", "agents*", "configs*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"

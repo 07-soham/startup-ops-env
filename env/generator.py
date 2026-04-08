@@ -230,7 +230,8 @@ def _generate_manual_state(
     # Generate some random negotiations (not typically manual)
     n_deals = min(2, len(email_data_list))  # Small number based on emails
     for i in range(n_deals):
-        client = random.choice(_CLIENTS) if _CLIENTS else "Client"
+        # B1 FIX: use seeded rng instead of global random.choice for determinism
+        client = rng.choice(_CLIENTS) if _CLIENTS else "Client"
         offer_price = round(rng.uniform(5_000.0, 50_000.0), 2)
         min_price = round(offer_price * rng.uniform(0.6, 0.9), 2)
         quality = round(rng.uniform(0.5, 1.5), 2)
@@ -467,7 +468,7 @@ class EventGenerator:
         if self.mode == "manual" and self.manual_inputs and self.manual_inputs.has_more():
             return self._generate_manual_events(email_counter, current_step)
 
-        return self._generate_auto_events(email_counter, task_counter, negotiation_counter)
+        return self._generate_auto_events(email_counter, task_counter, negotiation_counter, current_step)
 
     def _generate_manual_events(
         self,
@@ -513,6 +514,7 @@ class EventGenerator:
         email_counter: int,
         task_counter: int,
         negotiation_counter: int,
+        current_step: int = 0,
     ) -> Tuple[List[Email], List[Task], List[Negotiation]]:
         """Generate events probabilistically (original behavior)."""
         new_emails: List[Email] = []
@@ -526,7 +528,8 @@ class EventGenerator:
             sentiment = self.rng.choices(_SENTIMENTS, weights=[3, 4, 3], k=1)[0]
             sender = _SENDERS[self.rng.randint(0, len(_SENDERS) - 1)]
             subject = _SUBJECTS[self.rng.randint(0, len(_SUBJECTS) - 1)]
-            req_action = True if sentiment == Sentiment.negative else True
+            # B2 FIX: informational positive/neutral emails may not require action
+            req_action = (sentiment == Sentiment.negative) or (urgency == Urgency.high)
 
             new_emails.append(
                 Email(
@@ -535,7 +538,7 @@ class EventGenerator:
                     sender=sender,
                     subject=subject,
                     thread_id=f"auto_{eid}",
-                    timestamp=0,
+                    timestamp=current_step,  # B3 FIX: use real step, not hardcoded 0
                     escalation_level=0,
                     urgency=urgency,
                     sentiment=sentiment,
