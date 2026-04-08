@@ -195,7 +195,9 @@ with gr.Blocks(title="StartupOps AI Simulator") as demo:
                     value=scenarios[0] if scenarios else None,
                     label="Select Scenario",
                 )
-                scenario_info = gr.Markdown()
+                scenario_info = gr.Markdown(
+                    value=get_scenario_info(scenarios[0]) if scenarios else "No scenarios available"
+                )
                 seed_auto = gr.Number(value=42, label="Seed")
                 steps_auto = gr.Slider(10, 100, value=50, step=10, label="Max Steps")
                 run_auto_btn = gr.Button("Run Simulation")
@@ -261,13 +263,6 @@ with gr.Blocks(title="StartupOps AI Simulator") as demo:
         - Negotiation Score: % of negotiations accepted
         - Overall: Weighted 30/40/30
         """)
-
-    # Initialize scenario info
-    if scenarios:
-        demo.load(
-            fn=lambda: get_scenario_info(scenarios[0]),
-            outputs=scenario_info,
-        )
 
 
 if __name__ == "__main__":
