@@ -28,5 +28,5 @@ COPY openenv.yaml .
 # Expose port 7860 for HF Spaces
 EXPOSE 7860
 
-# Run unified Gradio UI + FastAPI app
-CMD ["python", "app.py"]
+# Run the unified Gradio UI + FastAPI ASGI app on port 7860
+CMD ["python", "-m", "uvicorn", "app:app", "--host", "0.0.0.0", "--port", "7860"]

@@ -1,10 +1,12 @@
 """
 StartupOps AI Simulator — Unified Gradio UI + FastAPI backend.
 
+Compatible with Gradio 6.0+
+
 Serves:
   • Gradio interactive simulation UI at  /
   • OpenEnv REST API endpoints at        /reset  /step  /state  etc.
-  • FastAPI docs at                       /docs
+  • FastAPI Swagger docs at              /docs
 
 Run:
     python app.py
@@ -13,7 +15,7 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Tuple
 
 import gradio as gr
 
@@ -23,10 +25,8 @@ from env.generator import ManualInputState
 from env.grader import grade_episode
 from env.scenarios import get_scenario, list_scenarios
 
-# ---------------------------------------------------------------------------
-# Import the FastAPI app so its OpenEnv endpoints are mounted alongside Gradio
-# ---------------------------------------------------------------------------
-from api import app as fastapi_app  # noqa: F401  (side-effect: registers routes)
+# Import FastAPI app so its OpenEnv routes are registered
+from api import app as fastapi_app  # noqa: F401
 
 
 # ---------------------------------------------------------------------------
@@ -56,7 +56,6 @@ def _base_config(seed: int = 42, max_steps: int = 50) -> Dict[str, Any]:
 
 
 def _run_episode(env: StartupOpsEnv) -> Tuple[str, str, str]:
-    """Run a full episode with the baseline agent, return (summary, logs, scores)."""
     agent = BaselineAgent()
     obs = env.reset()
     done = False
@@ -71,7 +70,6 @@ def _run_episode(env: StartupOpsEnv) -> Tuple[str, str, str]:
             "reward": round(reward, 4),
             "budget": round(obs.budget, 2),
             "satisfaction": round(obs.satisfaction, 4),
-            "info": info,
         })
 
     totals = env.get_totals()
@@ -95,17 +93,14 @@ def _run_episode(env: StartupOpsEnv) -> Tuple[str, str, str]:
         },
         indent=2,
     )
-
     return summary, logs_text, scores_text
 
 
 def run_simulation_auto(scenario: str, seed: int, max_steps: int) -> Tuple[str, str, str]:
-    """Auto mode: run a predefined scenario with the baseline agent."""
     config = _base_config(int(seed), int(max_steps))
     config["scenario"] = scenario
     config["mode"] = "auto"
-    env = StartupOpsEnv(config)
-    return _run_episode(env)
+    return _run_episode(StartupOpsEnv(config))
 
 
 def run_simulation_manual(
@@ -114,9 +109,7 @@ def run_simulation_manual(
     seed: int,
     max_steps: int,
 ) -> Tuple[str, str, str]:
-    """Manual mode: user provides raw emails and tasks."""
-    manual_emails = []
-    manual_tasks = []
+    manual_emails, manual_tasks = [], []
 
     for i, line in enumerate((emails_text or "").strip().splitlines()):
         line = line.strip()
@@ -129,7 +122,7 @@ def run_simulation_manual(
                 "timestamp": i,
             })
 
-    for i, line in enumerate((tasks_text or "").strip().splitlines()):
+    for line in (tasks_text or "").strip().splitlines():
         parts = [p.strip() for p in line.split(",")]
         if not parts or not parts[0]:
             continue
@@ -145,8 +138,7 @@ def run_simulation_manual(
     config = _base_config(int(seed), int(max_steps))
     config["mode"] = "manual"
     config["manual_inputs"] = ManualInputState(emails=manual_emails, tasks=manual_tasks)
-    env = StartupOpsEnv(config)
-    return _run_episode(env)
+    return _run_episode(StartupOpsEnv(config))
 
 
 def get_scenario_info(scenario: str) -> str:
@@ -160,9 +152,9 @@ def get_scenario_info(scenario: str) -> str:
 
 
 # ---------------------------------------------------------------------------
-# Gradio UI
+# Theme and CSS — in Gradio 6.0 these are passed via app_kwargs in
+# gr.mount_gradio_app(), NOT in gr.Blocks() and NOT as direct kwargs.
 # ---------------------------------------------------------------------------
-
 THEME = gr.themes.Soft(
     primary_hue="violet",
     secondary_hue="purple",
@@ -172,17 +164,16 @@ THEME = gr.themes.Soft(
 
 CSS = """
 .gradio-container { max-width: 1100px !important; margin: auto; }
-.tab-nav button { font-size: 1rem; font-weight: 600; }
-.summary-box textarea { font-size: 0.9rem; line-height: 1.6; }
-.score-box textarea { font-family: monospace; font-size: 0.85rem; }
 footer { display: none !important; }
 """
 
 scenarios = list_scenarios()
 
-with gr.Blocks(theme=THEME, css=CSS, title="StartupOps AI Simulator") as demo:
+# ---------------------------------------------------------------------------
+# Gradio UI — NO theme/css in gr.Blocks() in Gradio 6.0
+# ---------------------------------------------------------------------------
+with gr.Blocks(title="StartupOps AI Simulator") as demo:
 
-    # ---- Header ------------------------------------------------------------
     gr.Markdown(
         """
         # 🚀 StartupOps AI Simulator
@@ -191,13 +182,11 @@ with gr.Blocks(theme=THEME, css=CSS, title="StartupOps AI Simulator") as demo:
         """
     )
 
-    # ---- Tabs --------------------------------------------------------------
     with gr.Tabs():
 
         # ── Auto Mode ───────────────────────────────────────────────────────
         with gr.Tab("🤖 Auto Mode"):
             gr.Markdown("Run a **predefined scenario** automatically using the heuristic baseline agent.")
-
             with gr.Row():
                 with gr.Column(scale=1):
                     scenario_dd = gr.Dropdown(
@@ -214,25 +203,10 @@ with gr.Blocks(theme=THEME, css=CSS, title="StartupOps AI Simulator") as demo:
                     run_auto_btn = gr.Button("▶ Run Simulation", variant="primary", size="lg")
 
                 with gr.Column(scale=2):
-                    auto_summary = gr.Textbox(
-                        label="📊 Episode Summary",
-                        lines=8,
-                        elem_classes=["summary-box"],
-                        show_copy_button=True,
-                    )
+                    auto_summary = gr.Textbox(label="📊 Episode Summary", lines=8)
                     with gr.Row():
-                        auto_scores = gr.Textbox(
-                            label="🏆 Scores",
-                            lines=9,
-                            elem_classes=["score-box"],
-                            show_copy_button=True,
-                        )
-                        auto_logs = gr.Textbox(
-                            label="📜 Step Logs",
-                            lines=9,
-                            elem_classes=["score-box"],
-                            show_copy_button=True,
-                        )
+                        auto_scores = gr.Textbox(label="🏆 Scores", lines=9)
+                        auto_logs = gr.Textbox(label="📜 Step Logs", lines=9)
 
             scenario_dd.change(fn=get_scenario_info, inputs=scenario_dd, outputs=scenario_info_md)
             run_auto_btn.click(
@@ -244,16 +218,15 @@ with gr.Blocks(theme=THEME, css=CSS, title="StartupOps AI Simulator") as demo:
         # ── Manual Mode ─────────────────────────────────────────────────────
         with gr.Tab("✍ Manual Mode"):
             gr.Markdown(
-                "Provide your **own emails and tasks** — the baseline agent will handle them.\n\n"
+                "Provide your **own emails and tasks** — the baseline agent handles them.\n\n"
                 "Tasks format: `Task name, hours, deadline_steps, priority`"
             )
-
             with gr.Row():
                 with gr.Column(scale=1):
                     manual_emails_box = gr.Textbox(
                         label="📧 Emails (one per line)",
                         lines=5,
-                        placeholder="We need this fixed ASAP!\nFollowing up on the proposal...\nInvestor wants a call this week.",
+                        placeholder="We need this ASAP!\nFollowing up on the proposal...\nInvestor wants a call this week.",
                     )
                     manual_tasks_box = gr.Textbox(
                         label="✅ Tasks (name, hours, deadline, priority)",
@@ -265,25 +238,10 @@ with gr.Blocks(theme=THEME, css=CSS, title="StartupOps AI Simulator") as demo:
                     run_manual_btn = gr.Button("▶ Run Simulation", variant="primary", size="lg")
 
                 with gr.Column(scale=2):
-                    manual_summary = gr.Textbox(
-                        label="📊 Episode Summary",
-                        lines=8,
-                        elem_classes=["summary-box"],
-                        show_copy_button=True,
-                    )
+                    manual_summary = gr.Textbox(label="📊 Episode Summary", lines=8)
                     with gr.Row():
-                        manual_scores = gr.Textbox(
-                            label="🏆 Scores",
-                            lines=9,
-                            elem_classes=["score-box"],
-                            show_copy_button=True,
-                        )
-                        manual_logs = gr.Textbox(
-                            label="📜 Step Logs",
-                            lines=9,
-                            elem_classes=["score-box"],
-                            show_copy_button=True,
-                        )
+                        manual_scores = gr.Textbox(label="🏆 Scores", lines=9)
+                        manual_logs = gr.Textbox(label="📜 Step Logs", lines=9)
 
             run_manual_btn.click(
                 fn=run_simulation_manual,
@@ -330,12 +288,26 @@ with gr.Blocks(theme=THEME, css=CSS, title="StartupOps AI Simulator") as demo:
 
 
 # ---------------------------------------------------------------------------
-# Mount FastAPI routes onto Gradio app and launch
+# Mount Gradio UI onto FastAPI — ASGI app served by uvicorn
+#
+# Gradio 6.0 requires theme + css to be passed via app_kwargs dict,
+# NOT as direct keyword arguments to gr.mount_gradio_app().
 # ---------------------------------------------------------------------------
+app = gr.mount_gradio_app(
+    fastapi_app,
+    demo,
+    path="/",
+    app_kwargs={
+        "theme": THEME,
+        "css": CSS,
+    },
+)
 
-# Mount the FastAPI OpenEnv routes so /reset, /step, /state etc. still work
-app = gr.mount_gradio_app(fastapi_app, demo, path="/")
 
+# ---------------------------------------------------------------------------
+# Dev entry point: python app.py
+# ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    import uvicorn
     port = int(os.environ.get("PORT", 7860))
-    demo.launch(server_name="0.0.0.0", server_port=port)
+    uvicorn.run(app, host="0.0.0.0", port=port)
