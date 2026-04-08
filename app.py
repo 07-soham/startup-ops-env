@@ -209,18 +209,16 @@ with gr.Blocks(title="StartupOps AI Simulator") as demo:
                 )
                 scenario_info = gr.Markdown()
 
-                seed_auto = gr.Number(value=42, label="Seed", precision=0)
+                seed_auto = gr.Number(value=42, label="Seed")
                 steps_auto = gr.Slider(10, 100, value=50, step=10, label="Max Steps")
 
                 run_auto_btn = gr.Button("Run Simulation", variant="primary")
 
             with gr.Column(scale=2):
-                with gr.Tab("Summary"):
-                    auto_summary = gr.Textbox(label="Results", lines=15)
-                with gr.Tab("Step Logs"):
-                    auto_logs = gr.Textbox(label="Logs", lines=20)
-                with gr.Tab("Scores"):
-                    auto_scores = gr.Textbox(label="Detailed Scores", lines=20)
+                gr.Markdown("### Results")
+                auto_summary = gr.Textbox(label="Summary", lines=10)
+                auto_logs = gr.Textbox(label="Step Logs", lines=10)
+                auto_scores = gr.Textbox(label="Detailed Scores", lines=10)
 
         scenario_dropdown.change(fn=get_scenario_info, inputs=scenario_dropdown, outputs=scenario_info)
         run_auto_btn.click(
