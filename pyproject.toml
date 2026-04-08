@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "A deterministic RL environment simulating startup operations — email triage, task management, and deal negotiations."
 readme = "README.md"
 license = { text = "MIT" }
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 authors = [{ name = "StartupOps Team" }]
 keywords = ["reinforcement-learning", "simulation", "startup", "llm", "ai"]
 classifiers = [
@@ -16,7 +16,6 @@ classifiers = [
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: MIT License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -31,6 +30,8 @@ dependencies = [
     "python-multipart>=0.0.9",
     "numpy>=1.24.0",
     "matplotlib>=3.7.0",
+    "openai>=1.0.0",
+    "openenv-core>=0.2.0",
 ]
 
 [project.optional-dependencies]
@@ -46,6 +47,8 @@ dev = [
 [project.scripts]
 # CLI entry-point: `startupops` runs the baseline agent from the terminal
 startupops = "main:main"
+# Server entry-point for HF Spaces multi-mode deployment (required by OpenEnv)
+server = "server.app:main"
 
 [project.urls]
 Homepage = "https://github.com/07-soham/startup-ops-env"
