@@ -1,5 +1,5 @@
 # Dockerfile for StartupOps AI Simulator - HF Spaces
-# Uses FastAPI with OpenEnv REST endpoints
+# Uses Gradio app as entry point
 
 FROM python:3.11-slim
 
@@ -24,8 +24,8 @@ COPY main.py .
 COPY inference.py .
 COPY openenv.yaml .
 
-# Expose port 7860 for HF Spaces
+# Expose port 7860 for HF Spaces (Gradio default)
 EXPOSE 7860
 
-# Run FastAPI app with OpenEnv endpoints on port 7860
-CMD ["python", "-c", "import uvicorn; uvicorn.run('api:app', host='0.0.0.0', port=7860, reload=False)"]
+# Run Gradio app
+CMD ["python", "app.py"]
