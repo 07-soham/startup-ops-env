@@ -245,18 +245,16 @@ with gr.Blocks(title="StartupOps AI Simulator") as demo:
                     placeholder="Fix critical bug, 4, 2, high\nUpdate documentation, 2, 5, medium",
                 )
 
-                seed_manual = gr.Number(value=42, label="Seed", precision=0)
+                seed_manual = gr.Number(value=42, label="Seed")
                 steps_manual = gr.Slider(10, 100, value=50, step=10, label="Max Steps")
 
                 run_manual_btn = gr.Button("Run Simulation", variant="primary")
 
             with gr.Column(scale=2):
-                with gr.Tab("Summary"):
-                    manual_summary = gr.Textbox(label="Results", lines=15)
-                with gr.Tab("Step Logs"):
-                    manual_logs = gr.Textbox(label="Logs", lines=20)
-                with gr.Tab("Scores"):
-                    manual_scores = gr.Textbox(label="Detailed Scores", lines=20)
+                gr.Markdown("### Results")
+                manual_summary = gr.Textbox(label="Summary", lines=10)
+                manual_logs = gr.Textbox(label="Step Logs", lines=10)
+                manual_scores = gr.Textbox(label="Detailed Scores", lines=10)
 
         run_manual_btn.click(
             fn=run_simulation_manual,
