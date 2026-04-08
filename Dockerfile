@@ -1,5 +1,5 @@
 # Dockerfile for StartupOps AI Simulator - HF Spaces
-# Uses FastAPI for OpenEnv API endpoints
+# Runs the unified Gradio UI + FastAPI OpenEnv API on port 7860
 
 FROM python:3.11-slim
 
@@ -10,7 +10,7 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy Python requirements
+# Copy Python requirements and install
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -18,6 +18,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY env/ ./env/
 COPY agents/ ./agents/
 COPY configs/ ./configs/
+COPY server/ ./server/
 COPY api.py .
 COPY app.py .
 COPY main.py .
@@ -27,5 +28,5 @@ COPY openenv.yaml .
 # Expose port 7860 for HF Spaces
 EXPOSE 7860
 
-# Run FastAPI app on port 7860 (HF Spaces requirement)
-CMD ["python", "-c", "import uvicorn; uvicorn.run('api:app', host='0.0.0.0', port=7860)"]
+# Run unified Gradio UI + FastAPI app
+CMD ["python", "app.py"]

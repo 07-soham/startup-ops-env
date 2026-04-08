@@ -29,7 +29,7 @@ def main() -> int:
     print(f"[server] API docs: http://{host}:{port}/docs", flush=True)
 
     uvicorn.run(
-        "api:app",
+        "app:app",
         host=host,
         port=port,
         workers=workers,
