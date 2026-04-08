@@ -50,23 +50,21 @@ Unstructured Emails → LLM Parsing → Structured State → RL Decisions → Pe
 │   Frontend      │     │   API Layer     │     │   + LLM Parser  │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
         │                       │                       │
-        │              ┌────────┴────────┐             │
-        │              │  Scenario Lib   │             │
-        │              │  - investor_pressure         │
-        │              │  - vendor_delay   │             │
-        │              │  - customer_churn │             │
-        │              │  - hiring_crunch  │             │
-        │              └─────────────────┘             │
-        │                                              │
-        │              ┌─────────────────┐             │
-        └──────────────│  LLM Parser     │─────────────┘
+        │              ┌────────┴──────────┐            │
+        │              │  Scenario Lib     │            │
+        │              │  - investor_pressure           │
+        │              │  - vendor_delay   │            │
+        │              │  - customer_churn │            │
+        │              │  - hiring_crunch  │            │
+        │              └───────────────────┘            │
+        │                                               │
+        │              ┌─────────────────┐              │
+        └──────────────│  LLM Parser     │──────────────┘
                        │  - Claude API   │
                        │  - OpenAI API   │
                        │  - Fallback     │
                        └─────────────────┘
 ```
-
----
 
 
 ---
@@ -109,27 +107,27 @@ Unstructured Emails → LLM Parsing → Structured State → RL Decisions → Pe
 ---
 
 ## 🎮 Example Flow
-
+```
 Email: "We need this ASAP!"
 
-↓ (LLM Parser)
+        ↓ (LLM Parser)
 
 {
-urgency: "high",
-requires_action: true
+        urgency: "high",
+        requires_action: true
 }
 
-↓ (RL Decision)
+        ↓ (RL Decision)
 
 Action: assign_task(task_1)
 
-↓ (Environment)
+        ↓ (Environment)
 
 Reward: +0.10
 Budget: unchanged
 Satisfaction: increased
-
-
+```
+---
 
 ## Overview
 
@@ -161,7 +159,7 @@ decision-making problem with AI-powered email parsing and context-aware escalati
 ---
 
 ## 🎯 Example Simulation
-
+```
 Step 1:
 Action: reply_email(email_2)
 Reward: +0.15
@@ -175,7 +173,7 @@ Team Hours: 160 → 150
 Step 3:
 Action: ignore_email(email_3)
 Reward: −2.0 (high urgency missed)
-
+```
 ---
 
 ## 🏗️ Project Structure
@@ -502,6 +500,6 @@ npm test
 
 ---
 
-## 💡 Use Cases
+## Licenses
 
 MIT
