@@ -6,7 +6,7 @@ Usage:
     python inference.py --seed 42          # Run with specific seed
     python inference.py --scenario investor_pressure  # Run specific scenario
 
-Output Format:
+Output Format (STRICT):
     [START]
     {"episode": 0, "step": 0, ...}
     [STEP]
@@ -27,6 +27,9 @@ from typing import Any, Dict
 from agents.baseline import BaselineAgent
 from env.core import StartupOpsEnv
 from env.grader import grade_episode
+
+# OpenAI client import for potential API usage
+from openai import OpenAI
 
 
 def parse_args() -> argparse.Namespace:
@@ -51,18 +54,6 @@ def parse_args() -> argparse.Namespace:
         type=str,
         default=os.environ.get("SCENARIO", "investor_pressure"),
         help="Scenario to run (default: from SCENARIO env var or investor_pressure)",
-    )
-    parser.add_argument(
-        "--api-base-url",
-        type=str,
-        default=os.environ.get("API_BASE_URL", ""),
-        help="Base URL for API (optional)",
-    )
-    parser.add_argument(
-        "--model-name",
-        type=str,
-        default=os.environ.get("MODEL_NAME", ""),
-        help="Model name (optional)",
     )
     return parser.parse_args()
 
@@ -169,9 +160,42 @@ def run_inference(config: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def get_llm_client() -> Any:
+    """
+    Initialize LLM client using environment variables.
+
+    Uses HF_TOKEN + API_BASE_URL for Hugging Face inference,
+    or falls back to direct OpenAI client.
+    """
+    hf_token = os.environ.get("HF_TOKEN") or os.environ.get("HF_API_KEY")
+    api_base_url = os.environ.get("API_BASE_URL", "")
+    model_name = os.environ.get("MODEL_NAME", "huggingfaceh4/zephyr-7b-beta")
+
+    if hf_token and api_base_url:
+        # Use HF inference API
+        return OpenAI(
+            base_url=api_base_url,
+            api_key=hf_token
+        ), model_name
+    elif hf_token:
+        # Default HF inference endpoint
+        return OpenAI(
+            base_url="https://api-inference.huggingface.co",
+            api_key=hf_token
+        ), model_name
+    else:
+        return None, None
+
+
 def main() -> int:
     """Main entry point."""
     args = parse_args()
+
+    # Initialize LLM client if env vars are set
+    llm_client, model_name = get_llm_client()
+    if llm_client:
+        os.environ["OPENAI_API_KEY"] = os.environ.get("HF_TOKEN", "")
+        os.environ["API_BASE_URL"] = os.environ.get("API_BASE_URL", "https://api-inference.huggingface.co")
 
     # Build configuration
     config = {
@@ -195,12 +219,6 @@ def main() -> int:
         "scenario": args.scenario,
         "mode": "auto",
     }
-
-    # Optional: Store API config for reference
-    if args.api_base_url:
-        config["api_base_url"] = args.api_base_url
-    if args.model_name:
-        config["model_name"] = args.model_name
 
     try:
         result = run_inference(config)

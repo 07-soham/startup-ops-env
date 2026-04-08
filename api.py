@@ -14,7 +14,7 @@ from typing import Any, Dict, List, Optional
 
 from enum import Enum
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, Field
@@ -472,18 +472,19 @@ def obs_to_dict(obs) -> Dict[str, Any]:
     }
 
 
-class EnvConfigRequest(BaseModel):
-    """Configuration for environment initialization."""
-    seed: int = Field(42, description="Random seed for determinism")
-    max_steps: int = Field(50, description="Maximum steps per episode")
-    scenario: Optional[str] = Field(None, description="Scenario name to load")
+class ResetRequest(BaseModel):
+    """Request model for /reset endpoint."""
+    seed: int = Field(default=42, description="Random seed for determinism")
+    max_steps: int = Field(default=50, description="Maximum steps per episode")
+    scenario: str = Field(default="investor_pressure", description="Scenario name to load")
 
 
 @app.post("/reset", response_model=ResetResponse)
-async def reset_endpoint(config: Optional[EnvConfigRequest] = None):
+async def reset_endpoint(request: ResetRequest = None):
     """
     Reset the environment to initial state.
 
+    Accepts optional JSON body with seed, max_steps, and scenario.
     Returns initial observation and info dict.
     """
     global _env_instance
@@ -497,18 +498,24 @@ async def reset_endpoint(config: Optional[EnvConfigRequest] = None):
         base_config["scenario"] = "investor_pressure"
         base_config["mode"] = "auto"
 
-        if config:
-            base_config["seed"] = config.seed
-            base_config["max_steps"] = config.max_steps
-            if config.scenario:
-                base_config["scenario"] = config.scenario
+        # Apply config from request body if provided
+        if request is not None:
+            base_config["seed"] = request.seed
+            base_config["max_steps"] = request.max_steps
+            base_config["scenario"] = request.scenario
 
         _env_instance = StartupOpsEnv(base_config)
         obs = _env_instance.reset()
 
         return ResetResponse(
             observation=obs_to_dict(obs),
-            info={"seed": base_config["seed"], "max_steps": base_config["max_steps"], "scenario": base_config["scenario"]}
+            info={
+                "seed": base_config["seed"],
+                "max_steps": base_config["max_steps"],
+                "scenario": base_config["scenario"],
+                "step": 0,
+                "done": False
+            }
         )
     except Exception as e:
         import traceback

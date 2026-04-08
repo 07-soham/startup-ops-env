@@ -1,14 +1,44 @@
 name: StartupOpsEnv
 version: "1.0.0"
-description: >
-  A deterministic, modular Reinforcement Learning environment that simulates
-  the daily operations of an early-stage startup.  The agent manages emails,
-  tasks, and deal negotiations across a configurable number of timesteps.
+description: "A deterministic, modular Reinforcement Learning environment that simulates the daily operations of an early-stage startup. The agent manages emails, tasks, and deal negotiations across a configurable number of timesteps."
 author: StartupOps Team
 license: MIT
 
 entrypoint: env.core.StartupOpsEnv
 config: configs/config.yaml
+
+endpoints:
+  reset:
+    method: POST
+    path: /reset
+    description: Reset environment to initial state
+    parameters:
+      seed: {type: integer, default: 42, description: "Random seed"}
+      max_steps: {type: integer, default: 50, description: "Maximum steps per episode"}
+      scenario: {type: string, default: "investor_pressure", description: "Scenario to load"}
+    response:
+      observation: {type: object, description: "Initial observation"}
+      info: {type: object, description: "Environment info"}
+
+  step:
+    method: POST
+    path: /step
+    description: Execute one step in the environment
+    parameters:
+      action: {type: string, description: "Action type to perform"}
+      target_id: {type: string, optional: true, description: "Target ID for the action"}
+    response:
+      observation: {type: object, description: "Current observation"}
+      reward: {type: number, description: "Reward for this step"}
+      done: {type: boolean, description: "Episode complete flag"}
+      info: {type: object, description: "Additional info"}
+
+  state:
+    method: GET
+    path: /state
+    description: Get current environment state
+    response:
+      observation: {type: object, description: "Current observation"}
 
 action_space:
   - type: reply_email

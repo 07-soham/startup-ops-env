@@ -110,17 +110,25 @@ class LLMParser:
     """
     LLM-based email parser with keyword fallback.
 
-    Uses Anthropic's Claude API or OpenAI's GPT API if available,
-    otherwise falls back to deterministic keyword parsing.
+    Uses OpenAI-compatible API with HF_TOKEN for Hugging Face inference API,
+    or falls back to Anthropic/OpenAI if available.
+    Otherwise falls back to deterministic keyword parsing.
     """
 
     def __init__(
         self,
         api_key: Optional[str] = None,
-        provider: Optional[str] = None,  # "anthropic", "openai", or None (auto)
+        provider: Optional[str] = None,  # "hf", "anthropic", "openai", or None (auto)
     ):
+        # Support HF_TOKEN as primary key for hackathon
+        self.hf_token = os.environ.get("HF_TOKEN") or os.environ.get("HF_API_KEY")
+        self.api_base_url = os.environ.get("API_BASE_URL", "")
+        self.model_name = os.environ.get("MODEL_NAME", "huggingfaceh4/zephyr-7b-beta")
+
+        # Legacy support for Anthropic/OpenAI
         self.anthropic_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         self.openai_key = os.environ.get("OPENAI_API_KEY")
+
         self.provider = provider
         self.client = None
 
@@ -134,12 +142,21 @@ class LLMParser:
     def _select_provider(self) -> Optional[str]:
         """Select LLM provider based on available API keys."""
         # If explicitly specified, use that
+        if self.provider == "hf" and self.hf_token:
+            return "hf"
         if self.provider == "anthropic" and self.anthropic_key:
             return "anthropic"
         if self.provider == "openai" and self.openai_key:
             return "openai"
 
-        # Auto-select: prefer Anthropic, fallback to OpenAI
+        # Auto-select: prefer HF (hackathon requirement), then Anthropic, then OpenAI
+        if self.hf_token:
+            try:
+                import openai
+                return "hf"
+            except ImportError:
+                pass
+
         if self.anthropic_key:
             try:
                 import anthropic
@@ -158,7 +175,18 @@ class LLMParser:
 
     def _init_client(self):
         """Initialize the LLM client."""
-        if self.provider == "anthropic":
+        if self.provider == "hf":
+            try:
+                import openai
+                # Use HF inference API with OpenAI-compatible interface
+                base_url = self.api_base_url or "https://api-inference.huggingface.co"
+                self.client = openai.OpenAI(
+                    base_url=base_url,
+                    api_key=self.hf_token
+                )
+            except ImportError:
+                self.use_llm = False
+        elif self.provider == "anthropic":
             try:
                 import anthropic
                 self.client = anthropic.Anthropic(api_key=self.anthropic_key)
@@ -245,6 +273,16 @@ Rules:
             # Fallback to keyword parser on parse error
             return _keyword_parse(response_text)
 
+    def _call_hf(self, prompt: str) -> str:
+        """Call Hugging Face Inference API."""
+        response = self.client.chat.completions.create(
+            model=self.model_name,
+            max_tokens=150,
+            temperature=0,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        return response.choices[0].message.content or ""
+
     def _call_anthropic(self, prompt: str) -> str:
         """Call Anthropic Claude API."""
         response = self.client.messages.create(
@@ -290,7 +328,9 @@ Rules:
 
         for attempt in range(max_retries + 1):
             try:
-                if self.provider == "anthropic":
+                if self.provider == "hf":
+                    response_text = self._call_hf(prompt)
+                elif self.provider == "anthropic":
                     response_text = self._call_anthropic(prompt)
                 elif self.provider == "openai":
                     response_text = self._call_openai(prompt)
