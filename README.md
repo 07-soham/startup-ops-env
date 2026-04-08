@@ -1,3 +1,15 @@
+---
+title: StartupOps
+emoji: 🚀
+colorFrom: blue
+colorTo: green
+sdk: docker
+pinned: false
+license: mit
+app_file: app.py
+short_description: AI-powered startup operations simulator
+---
+
 # 🚀 StartupOps AI Simulator
 
 > A **full-stack AI-powered simulation platform** where LLMs convert unstructured startup communication into structured signals, and a deterministic RL environment evaluates decision-making under realistic operational pressure.
