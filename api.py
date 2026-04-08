@@ -404,22 +404,29 @@ async def reset_endpoint(config: Optional[EnvConfigRequest] = None):
     try:
         base_config = get_base_config()
 
+        # Set defaults for OpenEnv compatibility
+        base_config["seed"] = 42
+        base_config["max_steps"] = 50
+        base_config["scenario"] = "investor_pressure"
+        base_config["mode"] = "auto"
+
         if config:
             base_config["seed"] = config.seed
             base_config["max_steps"] = config.max_steps
             if config.scenario:
                 base_config["scenario"] = config.scenario
-                base_config["mode"] = "auto"
 
         _env_instance = StartupOpsEnv(base_config)
         obs = _env_instance.reset()
 
         return ResetResponse(
             observation=obs_to_dict(obs),
-            info={"seed": base_config["seed"], "max_steps": base_config["max_steps"]}
+            info={"seed": base_config["seed"], "max_steps": base_config["max_steps"], "scenario": base_config["scenario"]}
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Reset error: {str(e)}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        raise HTTPException(status_code=500, detail=f"Reset error: {str(e)}\n{traceback_str}")
 
 
 @app.post("/step", response_model=StepResponse)
