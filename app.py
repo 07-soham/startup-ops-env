@@ -172,7 +172,7 @@ scenarios = list_scenarios()
 # ---------------------------------------------------------------------------
 # Gradio UI — NO theme/css in gr.Blocks() in Gradio 6.0
 # ---------------------------------------------------------------------------
-with gr.Blocks(title="StartupOps AI Simulator") as demo:
+with gr.Blocks(title="StartupOps AI Simulator - OpenEnv") as demo:
 
     gr.Markdown(
         """
