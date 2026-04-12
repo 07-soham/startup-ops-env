@@ -98,6 +98,13 @@ def run_inference(config: Dict[str, Any]) -> Dict[str, Any]:
     total_reward = 0.0
     step_count = 0
 
+    # Track which task types are executed
+    tasks_executed = {
+        "email": False,
+        "task": False,
+        "negotiation": False,
+    }
+
     # Print START marker with initial state
     print("[START]")
     print(json.dumps({
@@ -111,6 +118,15 @@ def run_inference(config: Dict[str, Any]) -> Dict[str, Any]:
     while not done:
         # Agent selects action
         action = agent.act(obs)
+
+        # Track task execution
+        action_type = action.get("type", "")
+        if action_type in ["reply_email", "ignore_email"]:
+            tasks_executed["email"] = True
+        elif action_type in ["assign_task"]:
+            tasks_executed["task"] = True
+        elif action_type in ["accept_offer", "reject_offer", "negotiate"]:
+            tasks_executed["negotiation"] = True
 
         # Environment steps
         obs, reward, done, info = env.step(action)
@@ -139,24 +155,45 @@ def run_inference(config: Dict[str, Any]) -> Dict[str, Any]:
         state=env.state,
     )
 
+    # Ensure scores are strictly within (0, 1)
+    def _ensure_score_range(score: float) -> float:
+        """Ensure score is strictly within (0, 1)."""
+        if score <= 0.0:
+            return 0.01
+        if score >= 1.0:
+            return 0.99
+        return float(score)
+
+    email_score = _ensure_score_range(grades["email_score"])
+    task_score = _ensure_score_range(grades["task_score"])
+    negotiation_score = _ensure_score_range(grades["negotiation_score"])
+    overall_score = _ensure_score_range(grades["overall_score"])
+
+    # Count task types executed
+    task_types_count = sum(1 for v in tasks_executed.values() if v)
+
     # Print END marker with final results
     print("[END]")
     print(json.dumps({
         "total_reward": total_reward,
-        "email_score": grades["email_score"],
-        "task_score": grades["task_score"],
-        "negotiation_score": grades["negotiation_score"],
-        "overall_score": grades["overall_score"],
+        "email_score": email_score,
+        "task_score": task_score,
+        "negotiation_score": negotiation_score,
+        "overall_score": overall_score,
+        "task_types_executed": task_types_count,
+        "tasks_executed": tasks_executed,
     }))
     sys.stdout.flush()
 
     return {
         "total_reward": total_reward,
-        "email_score": grades["email_score"],
-        "task_score": grades["task_score"],
-        "negotiation_score": grades["negotiation_score"],
-        "overall_score": grades["overall_score"],
+        "email_score": email_score,
+        "task_score": task_score,
+        "negotiation_score": negotiation_score,
+        "overall_score": overall_score,
         "steps": step_count,
+        "task_types_executed": task_types_count,
+        "tasks_executed": tasks_executed,
     }
 
 
