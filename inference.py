@@ -176,7 +176,9 @@ def run_inference(config: Dict[str, Any]) -> Dict[str, Any]:
     # Count task types executed
     task_types_count = sum(1 for v in tasks_executed.values() if v)
 
-    # Print END marker with final results
+    # Print END marker with final results.
+    # "tasks" array satisfies hackathon validators that look for a structured
+    # list of graded task types, each with a score strictly in (0, 1).
     print("[END]")
     print(json.dumps({
         "total_reward": total_reward,
@@ -184,6 +186,11 @@ def run_inference(config: Dict[str, Any]) -> Dict[str, Any]:
         "task_score": task_score,
         "negotiation_score": negotiation_score,
         "overall_score": overall_score,
+        "tasks": [
+            {"name": "email_handling",  "score": email_score,        "grader": "EmailGrader"},
+            {"name": "task_management", "score": task_score,         "grader": "TaskGrader"},
+            {"name": "deal_negotiation","score": negotiation_score,   "grader": "NegotiationGrader"},
+        ],
         "task_types_executed": task_types_count,
         "tasks_executed": tasks_executed,
     }))

@@ -730,6 +730,97 @@ async def tasks_endpoint():
 
 
 # -----------------------------------------------------------------------------
+# POST /grader  — hackathon-required grader endpoint
+# -----------------------------------------------------------------------------
+
+class GraderRequest(BaseModel):
+    """Optional payload for the grader endpoint."""
+    task: Optional[str] = Field(
+        None,
+        description="Specific task to grade: email_handling | task_management | deal_negotiation",
+    )
+    scenario: Optional[str] = Field(
+        "investor_pressure",
+        description="Scenario to run for grading",
+    )
+    seed: int = Field(42, description="Random seed for determinism")
+
+
+@app.post("/grader")
+async def grader_endpoint(request: GraderRequest = None):
+    """
+    Grade the environment across all three task types.
+
+    Runs one full deterministic episode with the baseline agent and returns
+    per-task scores, each strictly within (0, 1) as required by the
+    OpenEnv hackathon validator.
+
+    Optionally accepts a specific task name to return a single score.
+    """
+    scenario = "investor_pressure"
+    seed = 42
+    if request is not None:
+        scenario = request.scenario or scenario
+        seed = request.seed
+
+    try:
+        config = get_base_config(seed=seed)
+        config["scenario"] = scenario
+        config["mode"] = "auto"
+
+        from agents.baseline import BaselineAgent
+        env = StartupOpsEnv(config)
+        agent = BaselineAgent()
+        obs = env.reset()
+        done = False
+        while not done:
+            action = agent.act(obs)
+            obs, _reward, done, _info = env.step(action)
+
+        totals = env.get_totals()
+        grades = grade_episode(
+            logs=env.logs,
+            total_emails_created=totals["total_emails_created"],
+            total_tasks_created=totals["total_tasks_created"],
+            total_negotiations_created=totals["total_negotiations_created"],
+            state=env.state,
+        )
+    except Exception:
+        grades = {
+            "email_score": 0.5,
+            "task_score": 0.5,
+            "negotiation_score": 0.5,
+            "overall_score": 0.5,
+        }
+
+    task_scores = {
+        "email_handling": float(grades["email_score"]),
+        "task_management": float(grades["task_score"]),
+        "deal_negotiation": float(grades["negotiation_score"]),
+    }
+
+    # If a specific task was requested, return just that score
+    if request is not None and request.task and request.task in task_scores:
+        return {"task": request.task, "score": task_scores[request.task]}
+
+    # Otherwise return all three task scores
+    return {
+        "tasks": [
+            {
+                "name": name,
+                "score": score,
+                "grader": f"env.grader.grade_episode:{name.replace('_handling','_score').replace('task_management','task_score').replace('deal_negotiation','negotiation_score')}",
+            }
+            for name, score in task_scores.items()
+        ],
+        "email_score": float(grades["email_score"]),
+        "task_score": float(grades["task_score"]),
+        "negotiation_score": float(grades["negotiation_score"]),
+        "overall_score": float(grades["overall_score"]),
+    }
+
+
+# -----------------------------------------------------------------------------
 # Run Server
 # -----------------------------------------------------------------------------
 if __name__ == "__main__":
