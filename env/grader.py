@@ -60,11 +60,12 @@ def grade_episode(
         overall_score, total_reward, summary
     """
     if not logs:
+        # Return minimal valid scores within (0, 1) open interval
         return {
-            "email_score": 0.0,
-            "task_score": 0.0,
-            "negotiation_score": 0.0,
-            "overall_score": 0.0,
+            "email_score": 0.01,
+            "task_score": 0.01,
+            "negotiation_score": 0.01,
+            "overall_score": 0.01,
             "total_reward": 0.0,
             "summary": "No steps recorded.",
         }
@@ -125,11 +126,18 @@ def grade_episode(
         f"  Missed Tasks      : {state.missed_tasks}\n"
     )
 
+    # ------------------------------------------------------------------
+    # Clamp scores to (0, 1) open interval for OpenEnv compliance
+    # ------------------------------------------------------------------
+    def _clamp(score: float) -> float:
+        """Clamp score to strictly within (0, 1)."""
+        return max(0.01, min(0.99, score))
+
     return {
-        "email_score": round(email_score, 4),
-        "task_score": round(task_score, 4),
-        "negotiation_score": round(negotiation_score, 4),
-        "overall_score": round(overall_score, 4),
+        "email_score": _clamp(round(email_score, 4)),
+        "task_score": _clamp(round(task_score, 4)),
+        "negotiation_score": _clamp(round(negotiation_score, 4)),
+        "overall_score": _clamp(round(overall_score, 4)),
         "total_reward": round(total_reward, 4),
         "summary": summary,
     }
