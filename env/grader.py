@@ -85,6 +85,7 @@ def grade_episode(
             "negotiation_score": float(0.5),
             "overall_score": float(0.5),
             "total_reward": float(0.0),
+            "summary": "No steps recorded.",
         }
 
     total_reward: float = sum(log["reward"] for log in logs)
@@ -148,7 +149,7 @@ def grade_episode(
     )
 
     # ------------------------------------------------------------------
-    # Return exactly the five keys the validator reads, all plain floats
+    # Return all keys including summary for callers that need it
     # ------------------------------------------------------------------
     return {
         "email_score": float(round(email_score, 4)),
@@ -156,4 +157,5 @@ def grade_episode(
         "negotiation_score": float(round(negotiation_score, 4)),
         "overall_score": float(round(overall_score, 4)),
         "total_reward": float(round(total_reward, 4)),
+        "summary": summary,
     }

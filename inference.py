@@ -134,10 +134,14 @@ def run_inference(config: Dict[str, Any]) -> Dict[str, Any]:
         step_count += 1
 
         # Print STEP marker with step data
+        # NOTE: "action" is the action TYPE string (e.g. "reply_email"),
+        # matching the docstring format so validators can detect task types
+        # via string comparison.
         print("[STEP]")
         print(json.dumps({
             "step": step_count,
-            "action": action,
+            "action": action_type,
+            "action_details": action,
             "observation": format_observation(obs),
             "reward": reward,
             "done": done,
