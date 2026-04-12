@@ -87,6 +87,22 @@ reward_components:
 termination:
   condition: "time_step >= max_steps"
 
+tasks:
+  - name: email_handling
+    description: "Handle and reply to incoming emails before deadlines"
+    grader: env.grader.grade_episode
+    score_key: email_score
+
+  - name: task_management
+    description: "Assign business tasks to team members before they expire"
+    grader: env.grader.grade_episode
+    score_key: task_score
+
+  - name: deal_negotiation
+    description: "Negotiate and close business deals within budget constraints"
+    grader: env.grader.grade_episode
+    score_key: negotiation_score
+
 baselines:
   - name: BaselineAgent
     module: agents.baseline
