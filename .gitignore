@@ -23,8 +23,9 @@ wheels/
 # Virtual environments
 venv/
 ENV/
-env/
 .venv/
+# NOTE: env/ is the project's source package, NOT a virtualenv — keep it tracked
+!env/
 
 # IDE
 .vscode/

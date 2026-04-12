@@ -11,6 +11,24 @@ from typing import Any, Dict, List
 from .models import EnvState
 
 
+def safe_score(x) -> float:
+    """Clamp x to the strictly-open interval (0, 1) required by the validator.
+
+    * None  → 0.5  (no data, neutral default)
+    * ≤ 0   → 0.01 (floor)
+    * ≥ 1   → 0.99 (ceiling)
+    * else  → float(x) as-is
+    """
+    if x is None:
+        return 0.5
+    x = float(x)
+    if x <= 0:
+        return 0.01
+    if x >= 1:
+        return 0.99
+    return x
+
+
 def grade_episode(
     logs: List[Dict[str, Any]],
     total_emails_created: int,
@@ -60,14 +78,13 @@ def grade_episode(
         overall_score, total_reward, summary
     """
     if not logs:
-        # Return minimal valid scores within (0, 1) open interval
+        # Return neutral valid scores within (0, 1) open interval
         return {
-            "email_score": 0.01,
-            "task_score": 0.01,
-            "negotiation_score": 0.01,
-            "overall_score": 0.01,
-            "total_reward": 0.0,
-            "summary": "No steps recorded.",
+            "email_score": float(0.5),
+            "task_score": float(0.5),
+            "negotiation_score": float(0.5),
+            "overall_score": float(0.5),
+            "total_reward": float(0.0),
         }
 
     total_reward: float = sum(log["reward"] for log in logs)
@@ -75,32 +92,36 @@ def grade_episode(
     # ------------------------------------------------------------------
     # email_score
     # ------------------------------------------------------------------
-    email_score: float = min(
-        1.0,
-        state.replied_emails / max(1, total_emails_created),
-    )
+    if total_emails_created == 0:
+        email_score: float = 0.5
+    else:
+        email_score = min(1.0, state.replied_emails / total_emails_created)
+    email_score = safe_score(email_score)
 
     # ------------------------------------------------------------------
     # task_score
     # ------------------------------------------------------------------
-    task_score: float = max(
-        0.0,
-        1.0 - state.missed_tasks / max(1, total_tasks_created),
-    )
+    if total_tasks_created == 0:
+        task_score: float = 0.5
+    else:
+        task_score = max(0.0, 1.0 - state.missed_tasks / total_tasks_created)
+    task_score = safe_score(task_score)
 
     # ------------------------------------------------------------------
     # negotiation_score
     # ------------------------------------------------------------------
     handled_negs: int = state.accepted_negotiations + state.rejected_negotiations
-    negotiation_score: float = state.accepted_negotiations / max(1, handled_negs)
+    if total_negotiations_created == 0:
+        negotiation_score: float = 0.5
+    else:
+        negotiation_score = state.accepted_negotiations / max(1, handled_negs)
+    negotiation_score = safe_score(negotiation_score)
 
     # ------------------------------------------------------------------
-    # overall_score  (weighted average)
+    # overall_score  (simple average, then safe_score)
     # ------------------------------------------------------------------
-    overall_score: float = (
-        email_score * 0.30
-        + task_score * 0.40
-        + negotiation_score * 0.30
+    overall_score: float = safe_score(
+        (email_score + task_score + negotiation_score) / 3
     )
 
     # ------------------------------------------------------------------
@@ -127,17 +148,12 @@ def grade_episode(
     )
 
     # ------------------------------------------------------------------
-    # Clamp scores to (0, 1) open interval for OpenEnv compliance
+    # Return exactly the five keys the validator reads, all plain floats
     # ------------------------------------------------------------------
-    def _clamp(score: float) -> float:
-        """Clamp score to strictly within (0, 1)."""
-        return max(0.01, min(0.99, score))
-
     return {
-        "email_score": _clamp(round(email_score, 4)),
-        "task_score": _clamp(round(task_score, 4)),
-        "negotiation_score": _clamp(round(negotiation_score, 4)),
-        "overall_score": _clamp(round(overall_score, 4)),
-        "total_reward": round(total_reward, 4),
-        "summary": summary,
+        "email_score": float(round(email_score, 4)),
+        "task_score": float(round(task_score, 4)),
+        "negotiation_score": float(round(negotiation_score, 4)),
+        "overall_score": float(round(overall_score, 4)),
+        "total_reward": float(round(total_reward, 4)),
     }
